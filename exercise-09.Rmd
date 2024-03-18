@@ -4,4 +4,163 @@ output: html_document
 date: "2024-03-06"
 ---
 
-Step 7 and Step 8 are the novel steps that you should figure out over break!
+## Step 1
+
+This exercise is working with the published dataset from Street et al. (2017).
+```{r}
+library(tidyverse) 
+library(dplyr)
+library(skimr) #To use the skim() function
+
+f <- "https://raw.githubusercontent.com/difiore/ada-2024-datasets/main/Street_et_al_2017.csv"
+(d <- read_csv(f,col_names = TRUE)) #As a tibble, d
+```
+
+
+To generate the five-number summary (median, minimum and maximum and 1st and 3rd quartile values), plus mean and standard deviation, for each quantitative variable, I am using the skim() function from {skimr}.
+```{r}
+skimd <- skim(d) |> 
+  filter(skim_type == "numeric") |>
+  select(skim_type, skim_variable, numeric.p50, numeric.p0, numeric.p100, numeric.p25, numeric.p75, numeric.mean, numeric.sd)
+
+names(skimd)[names(skimd) == "numeric.p50"] <- "median"
+names(skimd)[names(skimd) == "numeric.p0"] <- "minimum"
+names(skimd)[names(skimd) == "numeric.p100"] <- "maximum"
+names(skimd)[names(skimd) == "numeric.p25"] <- "Q1"
+names(skimd)[names(skimd) == "numeric.p75"] <- "Q3"
+names(skimd)[names(skimd) == "numeric.mean"] <- "mean"
+names(skimd)[names(skimd) == "numeric.sd"] <- "sd"
+
+(as.tibble(skimd))
+```
+
+## Step 2
+
+Plotting **brain size (ECV)** as a function of **social group size (Group_size)**:
+```{r}
+(p1 <- ggplot(data = d, aes(x = Group_size, y = ECV)) +
+   xlab("Group Size") + 
+   ylab("Brain Size (ECV)")+
+   geom_point(na.rm = TRUE))
+```
+
+Plotting **brain size (ECV)** as a function of **longevity (Longevity)**:
+```{r}
+(p2 <- ggplot(data = d, aes(x = Longevity, y = ECV)) +
+   xlab("Longevity") + 
+   ylab("Brain Size (ECV)") +
+   geom_point(na.rm = TRUE))
+```
+
+Plotting **brain size (ECV)** as a function of **juvenile period length (Weaning)**:
+```{r}
+(p3 <- ggplot(data = d, aes(x = Weaning, y = ECV)) +
+   xlab("Juvenile Period Length") + 
+   ylab("Brain Size (ECV)")+
+   geom_point(na.rm = TRUE))
+```
+
+Plotting **brain size (ECV)** as a function of **reproductive lifespan (Repro_lifespan)**:
+```{r}
+(p4 <- ggplot(data = d, aes(x = Repro_lifespan, y = ECV)) +
+   xlab("Reproductive Lifespan") + 
+   ylab("Brain Size (ECV)")+
+   geom_point(na.rm = TRUE))
+```
+
+## Step 3
+
+Deriving the ordinary least squares regression coefficients, β1 and β0, for ECV as a function of social group size:
+
+Note: 
+β1 = cov(x,y)/var(x))
+β0 = mean(y) - β1*(mean(x))
+```{r}
+d2 <- d |> drop_na("ECV","Group_size")
+
+(β1 <- cov(d2$Group_size,d2$ECV)/var(d2$Group_size))
+(β0 <- mean(d2$ECV) - β1 * mean(d2$Group_size))
+```
+
+## Step 4
+
+Now, I can check my β1 and β0 derived in **Step 3** using the lm() function:
+```{r}
+(lm(ECV ~ Group_size, data = d2))
+```
+The regression coefficients returned by lm() match those derived in **Step 3**.
+
+## Step 5
+
+### Repeating the above analysis for catarrhines only:
+
+Repeating **Step 3** for catarrhines only:
+```{r}
+catarrhines <- d2 |> filter(Taxonomic_group == "Catarrhini")
+
+(cβ1 <- cov(catarrhines$Group_size,catarrhines$ECV)/var(catarrhines$Group_size))
+(cβ0 <- mean(catarrhines$ECV) - cβ1 * mean(catarrhines$Group_size))
+```
+
+Repeating **Step 4** for catarrhines only:
+```{r}
+(lm(ECV ~ Group_size, data = catarrhines))
+```
+
+### Repeating the above analysis for platyrrhines only:
+
+Repeating **Step 3** for platyrrhines only:
+```{r}
+platyrrhines <- d2 |> filter(Taxonomic_group == "Platyrrhini")
+
+(pβ1 <- cov(platyrrhines$Group_size,platyrrhines$ECV)/var(platyrrhines$Group_size))
+(pβ0 <- mean(platyrrhines$ECV) - pβ1 * mean(platyrrhines$Group_size))
+```
+
+Repeating **Step 4** for platyrrhines only:
+```{r}
+(lm(ECV ~ Group_size, data = platyrrhines))
+```
+
+### Repeating the above analysis for strepsirhines only: 
+Repeating **Step 3** for strepsirhines only:
+```{r}
+strepsirhines <- d2 |> filter(Taxonomic_group == "Strepsirhini")
+
+(sβ1 <- cov(strepsirhines$Group_size,strepsirhines$ECV)/var(strepsirhines$Group_size))
+(sβ0 <- mean(strepsirhines$ECV) - sβ1 * mean(strepsirhines$Group_size))
+```
+
+Repeating **Step 4** for strepsirhines only:
+```{r}
+(lm(ECV ~ Group_size, data = strepsirhines))
+```
+
+```{r}
+group <- as.tibble(c("Catarrhines","Platyrrhines","Strepsirhines"))
+beta1 <- as.tibble(c(cβ1,pβ1,sβ1))
+beta0 <- as.tibble(c(cβ0,pβ0,sβ0))
+
+###I want to display these as a tibble
+```
+
+
+INCOMPLETE: Do my regression coefficients differ among groups? How might you determine this?
+
+INCOMPLETE ## Step 6
+Calculating the standard error for the slope coefficient, the 95% CI, and the p value associated with this coefficient for the regression of ECV on social group size from my original **Step 3** and **Step 4**:
+```{r}
+
+```
+
+
+Checking these calculations by extracting the same information from the results of the lm() function:
+```{r}
+
+```
+
+
+
+INCOMPLETE: ## Step 7
+
+INCOMPLETE: ## Step 8
