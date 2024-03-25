@@ -135,31 +135,52 @@ Repeating **Step 4** for strepsirhines only:
 ```{r}
 (lm(ECV ~ Group_size, data = strepsirhines))
 ```
-
+Looking at these values sides by side...
 ```{r}
 group <- as.tibble(c("Catarrhines","Platyrrhines","Strepsirhines"))
+names(group)[names(group) == "value"] <- "Taxonomic Group"
 beta1 <- as.tibble(c(cβ1,pβ1,sβ1))
+names(beta1)[names(beta1) == "value"] <- "β1"
 beta0 <- as.tibble(c(cβ0,pβ0,sβ0))
+names(beta0)[names(beta0) == "value"] <- "β0"
 
-###I want to display these as a tibble
+(compare <- bind_cols(group,beta1,beta0))
 ```
 
-
-INCOMPLETE: Do my regression coefficients differ among groups? How might you determine this?
+The regression coefficients appear to differ among groups. One way to test this would be to use a permutation test to evaluate whether or not there was a statistically significant difference between the values.
 
 INCOMPLETE ## Step 6
-Calculating the standard error for the slope coefficient, the 95% CI, and the p value associated with this coefficient for the regression of ECV on social group size from my original **Step 3** and **Step 4**:
+Calculating the standard error for the slope coefficient: the 95% CI, and the p value associated with this coefficient for the regression of ECV on social group size from my original **Step 3** and **Step 4**:
+
 ```{r}
+#Calculating the standard error for the slope coefficient:
+m <- (lm(ECV ~ Group_size, data = d2))
+
+SSE <- sum((m$residuals)^2)
+
+SSX <- sum((m$model$Group_size-mean(m$model$Group_size))^2)
+
+MSE <- SSE/(nrow(d2)-2)
+
+(seβ1 <- sqrt(MSE/SSX))
+```
+
+```{r}
+#Calculating the 95% CI:
 
 ```
 
 
 Checking these calculations by extracting the same information from the results of the lm() function:
 ```{r}
-
+library(broom)
+(tidy(m))
+(confint(m,"Group_size",level=0.95))
 ```
 
-
+The seβ1 is 0.3508, which matches the seβ1 I calculated by hand.
+The 95% CI is [1.769874,3.156269].
+The p-value is 7.259e-11.
 
 INCOMPLETE: ## Step 7
 
